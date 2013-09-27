@@ -4,9 +4,9 @@
 <head>
 	<meta charset="utf-8">
 	<title>如何管理多个Github账户 - My Octopress Blog</title>
-    <meta name="author" content="Your Name">
+    <meta name="author" content="SmithW">
     
-	<meta name="description" content=" ">
+	<meta name="description" content="Let’s look at how to manage multiple Github accounts from one computer. In essence, it’s simply a matter of balancing both your git and ssh &hellip;">
 	
 	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
@@ -37,7 +37,7 @@
     <header id="header" class="inner"><!-- for more effects see _animate.scss -->
 <h1 class="animated bounceInDown">
     <div id="headerbg">
-        Your Name
+        SmithW
     </div>
 </h1>
 <br>
@@ -80,7 +80,129 @@
     <div id="content" class="inner">
         <article class="post">
 	<h2 class="title">如何管理多个Github账户</h2>
-	<div class="entry-content">
+	<div class="entry-content"><p>Let’s look at how to manage multiple Github accounts from one computer. In essence, it’s simply a matter of balancing both your git and ssh configurations &ndash; which actually is not as bad as it might seem.</p>
+
+<pre><code>Note: This tutorial is meant for Unix users.
+</code></pre>
+
+<p>Set up SSH Keys</p>
+
+<p>Let’s assume your two Github accounts are named githubPersonal and githubWork, respectively.</p>
+
+<p>Create two SSH keys, saving each to a separate file:</p>
+
+<p>$ cd ~/.ssh
+$ ssh-keygen -t rsa -C &ldquo;<a href="&#109;&#x61;&#105;&#x6c;&#x74;&#111;&#x3a;&#121;&#111;&#117;&#x72;&#95;&#101;&#x6d;&#97;&#x69;&#108;&#x40;&#x61;&#x73;&#115;&#x6f;&#x63;&#105;&#97;&#x74;&#x65;&#100;&#x5f;&#x77;&#105;&#x74;&#104;&#95;&#103;&#x69;&#116;&#x68;&#117;&#98;&#x50;&#x65;&#114;&#x73;&#x6f;&#x6e;&#x61;&#x6c;&#46;&#99;&#111;&#x6d;">&#x79;&#x6f;&#x75;&#114;&#x5f;&#101;&#109;&#97;&#x69;&#108;&#x40;&#97;&#x73;&#x73;&#x6f;&#x63;&#105;&#x61;&#116;&#101;&#x64;&#95;&#x77;&#105;&#x74;&#104;&#x5f;&#103;&#x69;&#x74;&#x68;&#117;&#98;&#80;&#101;&#x72;&#x73;&#x6f;&#x6e;&#97;&#x6c;&#46;&#99;&#111;&#x6d;</a>&rdquo;</p>
+
+<h1>save it as id_rsa_personal when prompted</h1>
+
+<p>$ ssh-keygen -t rsa -C &ldquo;<a href="&#109;&#97;&#105;&#x6c;&#116;&#111;&#58;&#121;&#x6f;&#117;&#114;&#95;&#x65;&#109;&#x61;&#105;&#x6c;&#x40;&#x61;&#x73;&#115;&#111;&#99;&#x69;&#97;&#x74;&#101;&#100;&#x5f;&#x77;&#105;&#x74;&#x68;&#95;&#x67;&#x69;&#116;&#x68;&#x75;&#x62;&#87;&#x6f;&#x72;&#x6b;&#x2e;&#99;&#111;&#109;">&#121;&#x6f;&#117;&#114;&#x5f;&#101;&#x6d;&#x61;&#x69;&#x6c;&#64;&#x61;&#115;&#115;&#111;&#x63;&#105;&#x61;&#116;&#101;&#x64;&#95;&#x77;&#x69;&#x74;&#x68;&#95;&#x67;&#x69;&#116;&#x68;&#x75;&#x62;&#x57;&#x6f;&#x72;&#107;&#46;&#99;&#x6f;&#109;</a>&rdquo;</p>
+
+<h1>save it as id_rsa_work when prompted</h1>
+
+<p>The above commands setup the following files:</p>
+
+<pre><code>id_rsa_personal
+id_rsa_personal.pub
+id_rsa_work
+id_rsa_work.pub
+</code></pre>
+
+<p>Add the keys to your Github accounts:</p>
+
+<pre><code>Copy the key to your clipboard:
+
+$ pbcopy &lt; ~/.ssh/id_rsa_personal.pub
+
+Add the key to your account:
+    Go to your Account Settings
+    Click “SSH Keys” then “Add SSH key”
+    Paste your key into the “Key” field and add a relevant title
+    Click “Add key” then enter your Github password to confirm
+
+Repeat the process for your githubWork account.
+</code></pre>
+
+<p>Create a configuration file to manage the separate keys</p>
+
+<pre><code>Create a config file in ~/.ssh/
+
+$ touch config
+
+Edit the file using the text editor of your choice. I used vim - $ vim config:
+
+# githubPersonal
+Host personal
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_personal
+
+# githubWork
+Host work
+    HostName github.com
+    User git
+    IdentityFile ~/.ssh/id_rsa_work
+</code></pre>
+
+<p>Update stored identities</p>
+
+<pre><code>Clear currently stored identities:
+
+$ ssh-add -D
+
+Add new keys:
+
+$ ssh-add id_rsa_personal
+$ ssh-add id_rsa_work
+
+Test to make sure new keys are stored:
+
+$ ssh-add -l
+
+Test to make sure Github recognizes the keys:
+
+$ ssh -T personal
+Hi githubPersonal! You've successfully authenticated, but GitHub does not provide shell access.
+$ ssh -T work
+Hi githubWork! You've successfully authenticated, but GitHub does not provide shell access.
+</code></pre>
+
+<p>Test PUSH</p>
+
+<pre><code>On Github, create a new repo in your personal account, githubPersonal, called test-personal.
+
+Back on your local machine, create a test directory:
+
+$ cd ~/documents
+$ mkdir test-personal
+$ cd test-personal
+
+Add a blank “readme.md” file and PUSH to Github:
+
+$ touch readme.md
+$ git init
+$ git add .
+$ git commit -am "first commit"
+$ git remote add origin git@personal:githubPersonal/test-personal.git
+$ git push origin master
+
+    Notice how we’re using the custom account, git@personal, instead of git@github.com.
+
+Repeat the process for your githubWork account.
+</code></pre>
+
+<p>Test PULL</p>
+
+<pre><code>Add some text to the readme.md file in your personal account on Github.
+
+Now PULL and merge the changes by running the following command within the test-personal directory:
+
+$ git pull origin master
+
+Again, repeat this for your githubWork account.
+</code></pre>
+
+<p>Questons? Comments? Did I miss something? Comment below.</p>
 </div>
 
 <div class="meta">
@@ -107,7 +229,7 @@
     <div style="display:inline">
     Copyright &copy; 2013
 
-    Your Name
+    SmithW
 . Powered by <a href="http://octopress.org">Octopress</a> | 
     Theme <a href="http://github.com/panks/fabric">fabric</a> by <a href="http://panks.me">Pankaj Kumar</a>
 </div>
